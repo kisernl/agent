@@ -16,12 +16,12 @@
 		"dist"
 	],
 	"dependencies": {
-		"@ai-sdk/anthropic": "^1.2.12",
 		"ai": "^4.3.16",
 		"dotenv": "^16.5.0",
 		"ink": "^4.1.0",
 		"ink-text-input": "^5.0.1",
 		"meow": "^11.0.0",
+		"openai": "^4.0.0",
 		"react": "^18.2.0"
 	},
 	"devDependencies": {

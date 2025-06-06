@@ -1,5 +1,4 @@
-import {createAnthropic} from '@ai-sdk/anthropic';
-import {generateText} from 'ai';
+import OpenAI from 'openai';
 
 export interface AIConfig {
 	model?: string;
@@ -9,31 +8,44 @@ export interface AIConfig {
 export class AIService {
 	private model: string;
 	private apiKey: string;
-	private anthropic: ReturnType<typeof createAnthropic>;
+	private client: OpenAI;
 
 	constructor(config: AIConfig = {}) {
-		this.model = config.model || 'claude-3-5-sonnet-20241022';
-		this.apiKey = config.apiKey || process.env['ANTHROPIC_API_KEY'] || '';
-		this.anthropic = createAnthropic({apiKey: this.apiKey});
-
+		this.model = config.model || 'openai/gpt-3.5-turbo';
+		this.apiKey = config.apiKey || process.env['OPENROUTER_API_KEY'] || '';
+		
 		if (!this.apiKey) {
-			throw new Error('ANTHROPIC_API_KEY is required');
+			throw new Error('OPENROUTER_API_KEY is required. Get one at https://openrouter.ai/keys');
 		}
+
+		this.client = new OpenAI({
+			baseURL: 'https://openrouter.ai/api/v1',
+			defaultHeaders: {
+				'HTTP-Referer': 'https://github.com/compute/agent',
+				'X-Title': 'Compute Agent',
+			},
+			apiKey: this.apiKey,
+		});
 	}
 
 	async generateResponse(prompt: string): Promise<string> {
 		try {
-			const {text} = await generateText({
-				model: this.anthropic(this.model),
-				prompt,
+			const completion = await this.client.chat.completions.create({
+				model: this.model,
+				messages: [
+					{
+						role: 'user',
+						content: prompt,
+					},
+				],
 				temperature: 0.7,
-				maxTokens: 2000,
+				max_tokens: 2000,
 			});
 
-			return text;
+			return completion.choices[0]?.message?.content || 'No response generated';
 		} catch (error) {
 			console.error('AI generation error:', error);
-			return 'Sorry, I encountered an error while processing your request.';
+			return 'Sorry, I encountered an error while processing your request. Please check your API key and try again.';
 		}
 	}
 

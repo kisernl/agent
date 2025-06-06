@@ -1,5 +1,5 @@
 import process from 'node:process';
-import React, {useState, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
 import TextInput from 'ink-text-input';
 import {AIService} from './ai.js';
@@ -18,8 +18,15 @@ export default function App() {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [aiService, setAiService] = useState<AIService | null>(null);
 	const [currentModel, setCurrentModel] = useState(
-		'claude-3-5-sonnet-20241022',
+		'deepseek/deepseek-chat-v3-0324:free',
 	);
+
+	const availableModels = [
+		'deepseek/deepseek-chat-v3-0324:free',
+		'meta-llama/llama-4-maverick:free',
+		'deepseek/deepseek-r1:free',
+		'qwen/qwen3-235b-a22b:free',
+	];
 
 	useEffect(() => {
 		try {
@@ -65,7 +72,7 @@ export default function App() {
 					'/help - Show this help message',
 					'/clear - Clear the conversation',
 					'/exit - Exit the application',
-					'/model <name> - Switch AI model (coming soon)',
+					'/model <name> - Switch AI model',
 					'',
 					'',
 					'Or just type normally to chat!',
@@ -78,14 +85,25 @@ export default function App() {
 		if (trimmed.startsWith('/model')) {
 			const parts = trimmed.split(' ');
 			if (parts.length === 1) {
+				const modelList = availableModels.map(m => `- ${m}`).join('\n');
 				const currentModelMessage: Message = {
 					id: messages.length + 1,
 					type: 'assistant',
-					content: `Current model: ${currentModel}\n\nAvailable models:\n- claude-3-5-sonnet-20241022\n- claude-3-5-haiku-20241022\n- claude-3-opus-20240229\n\nUse /model <name> to switch`,
+					content: `Current model: ${currentModel}\n\nAvailable models:\n${modelList}\n\nUse /model <name> to switch`,
 				};
 				setMessages([...messages, currentModelMessage]);
 			} else {
 				const newModel = parts.slice(1).join(' ');
+				if (!availableModels.includes(newModel)) {
+					const errorMessage: Message = {
+						id: messages.length + 1,
+						type: 'assistant',
+						content: `Unknown model: ${newModel}. Use /model to see available models.`,
+					};
+					setMessages([...messages, errorMessage]);
+					return true;
+				}
+
 				if (aiService) {
 					aiService.setModel(newModel);
 					setCurrentModel(newModel);
