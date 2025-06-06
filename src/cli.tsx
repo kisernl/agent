@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import {render} from 'ink';
 import meow from 'meow';
+import {config} from 'dotenv';
+
+// Load environment variables before anything else
+config();
+
 import App from './app.js';
 
 meow(

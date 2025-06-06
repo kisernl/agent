@@ -3,7 +3,6 @@ import {useState, useEffect} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
 import TextInput from 'ink-text-input';
 import {AIService} from './ai.js';
-import * as dotenv from 'dotenv';
 
 type Message = {
 	id: number;
@@ -29,20 +28,26 @@ export default function App() {
 	];
 
 	useEffect(() => {
-		try {
-			// Load environment variables
-			dotenv.config();
-			const service = new AIService();
-			setAiService(service);
-		} catch (error: any) {
-			const errorMessage: Message = {
+		setAiService(new AIService({
+			model: currentModel,
+			systemPrompt: `You are an AI assistant running on the OpenRouter platform. \
+			Your current model configuration is: ${currentModel}. \
+			When asked about your identity or model, always respond with: "I am an AI assistant running on the ${currentModel} model via OpenRouter."`,
+		}));
+	}, [currentModel]);
+
+	useEffect(() => {
+		setMessages([
+			{
 				id: 1,
 				type: 'assistant',
-				content: `Error initializing AI: ${error.message}. Please ensure ANTHROPIC_API_KEY is set in your .env file.`,
-			};
-			setMessages([errorMessage]);
-		}
-	}, []);
+				content: `Welcome to @ComputeSDK's Agent!\n\n` +
+					`I'm an AI coding assistant running on ${aiService?.getModel() || ''}.\n` +
+					`I can help you with coding tasks, answer questions, and assist with development.\n` +
+					`Type /help to see available commands.`
+			}
+		]);
+	}, [aiService]);
 
 	useInput((_, key) => {
 		if (key.escape) {
