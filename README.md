@@ -23,5 +23,5 @@ npm run dev
 ## Usage
 
 ```bash
-node dist/cli.js
+npm start
 ```
